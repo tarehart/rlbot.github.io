@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RLBot</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+          integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/tournament-style.css">
+
+    <script
+            src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+<!--    https://developers.google.com/identity/sign-in/web/sign-in-->
+    <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
+
+
+</head>
+<body>
+
+<div class="jumbotron jumbotron-fluid">
+    <div class="container">
+        <a href="../">
+            <h1 class="display-4"><img src="../rlbot_logo.png" class="line-logo"> RLBot</h1>
+        </a>
+        <p class="lead">League Submission Form!</p>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-lg-8">
+
+            <!-- General info -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+                    <input type="file" onchange="onFileChange" accept="application/zip">
+                    <button class="button btn-primary" onclick="uploadFile()">Submit</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <iframe src="https://discordapp.com/widget?id=348658686962696195&theme=dark" width="350" height="500"
+                    allowtransparency="true" frameborder="0"></iframe>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Footer -->
+<footer class="page-footer font-small blue pb-5">
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 py-5">
+                <div class="d-flex justify-content-center">
+
+                    <!-- Twitter -->
+                    <a href="https://twitter.com/RLBotOfficial" class="mx-4">
+                        <img class="ft-img gray-to-color" src="../twitter.png">
+                    </a>
+
+                    <!-- Youtube -->
+                    <a href="https://www.youtube.com/c/RLBotOfficial" class="mx-4">
+                        <img class="ft-img gray-to-color" src="../youtube.png">
+                    </a>
+
+                    <!-- Twitch -->
+                    <a href="https://www.twitch.tv/rlbotofficial" class="mx-4">
+                        <img class="ft-img gray-to-color" src="../twitch.png">
+                    </a>
+
+                    <!-- Reddit -->
+                    <a href="https://www.reddit.com/r/RocketLeagueBots/" class="mx-4">
+                        <img class="ft-img gray-to-color" src="../reddit.png">
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</footer>
+
+<script>
+
+    // https://read.acloud.guru/how-to-add-file-upload-features-to-your-website-with-aws-lambda-and-s3-48bbe9b83eaa
+
+    function onFileChange (e) {
+      let files = e.target.files || e.dataTransfer.files
+      if (!files.length) return
+      this.createImage(files[0])
+    }
+
+    function createImage (file) {
+      let reader = new FileReader()
+      reader.onload = (e) => {
+        console.log('length: ', e.target.result.includes('data:application/zip'))
+        if (!e.target.result.includes('data:application/zip')) {
+          return alert('Wrong file type - ZIP only.')
+        }
+        this.zipFile = e.target.result
+      }
+      reader.readAsDataURL(file)
+    }
+
+    function removeImage (e) {
+      console.log('Remove clicked')
+      this.image = ''
+    }
+
+    function uploadFile (e) {
+        console.log('Upload clicked')
+        // Get the presigned URL
+        $.get( "https://tare-apigateway", function( response ) {
+            console.log('Response: ', response.data)
+            console.log('Uploading: ', this.zipFile)
+            let binary = atob(this.zipFile.split(',')[1])
+            let array = []
+            for (var i = 0; i < binary.length; i++) {
+                array.push(binary.charCodeAt(i))
+            }
+            let blobData = new Blob([new Uint8Array(array)], {type: 'application/zip'})
+            console.log('Uploading to: ', response.data.uploadURL)
+
+            $.ajax({
+                url: 'response.data.uploadURL',
+                type: 'PUT',
+                data: blobData,
+                success: function(result) {
+                    console.log('Result: ', result)
+                    // Final URL for the user doesn't need the query string params
+                    this.uploadURL = response.data.uploadURL.split('?')[0]
+                }
+            });
+
+        });
+
+
+    }
+
+</script>
+
+</body>
+</html>
